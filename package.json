@@ -1,0 +1,21 @@
+{
+  "name": "fatura-plus",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/web",
+    "dev:api": "npm run dev -w apps/api",
+    "build": "npm run build -w apps/web"
+  },
+  "overrides": {
+    "prisma": {
+      "@prisma/config": {
+        "deepmerge-ts": "^8.0.1"
+      }
+    }
+  }
+}

@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  passwordHash  String
+  createdAt     DateTime       @default(now())
+  cards         Card[]
+  categories    Category[]
+  categoryRules CategoryRule[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Card {
+  id       String    @id @default(cuid())
+  name     String
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@index([userId])
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  cardId         String
+  card           Card          @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  referenceMonth DateTime
+  dueDate        DateTime
+  totalAmount    Float
+  status         InvoiceStatus @default(OPEN)
+  items          InvoiceItem[]
+  createdAt      DateTime      @default(now())
+
+  @@unique([cardId, referenceMonth])
+  @@index([cardId])
+}
+
+model InvoiceItem {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  amount      Float
+  date        DateTime
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  installment String?
+
+  @@index([invoiceId])
+  @@index([categoryId])
+}
+
+model Category {
+  id     String         @id @default(cuid())
+  userId String
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name   String
+  color  String
+  items  InvoiceItem[]
+  rules  CategoryRule[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model CategoryRule {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keyword    String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, keyword])
+  @@index([userId])
+  @@index([categoryId])
+}
+
+enum InvoiceStatus {
+  OPEN
+  PAID
+  OVERDUE
+}
