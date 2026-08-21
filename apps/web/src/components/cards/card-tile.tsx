@@ -13,18 +13,28 @@ const BRAND_LABELS: Record<CardBrand, string | null> = {
 
 interface CardTileProps {
   card: CreditCard;
+  onOpen: () => void;
   onImport: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-export function CardTile({ card, onImport, onEdit, onDelete }: CardTileProps) {
+export function CardTile({ card, onOpen, onImport, onEdit, onDelete }: CardTileProps) {
   const brandLabel = BRAND_LABELS[card.brand];
+
+  const stop = (fn: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    fn();
+  };
 
   return (
     <div
       data-slot="card-tile"
-      className="group relative flex h-44 w-full flex-col justify-between overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-transform hover:-translate-y-1"
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onOpen()}
+      className="group relative flex h-44 w-full cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-transform hover:-translate-y-1"
       style={{
         background: `linear-gradient(135deg, ${card.color}, color-mix(in srgb, ${card.color} 55%, black))`,
       }}
@@ -45,7 +55,7 @@ export function CardTile({ card, onImport, onEdit, onDelete }: CardTileProps) {
         <div className="flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           <button
             type="button"
-            onClick={onImport}
+            onClick={stop(onImport)}
             aria-label="Importar fatura"
             className="rounded-full bg-white/15 p-1.5 transition-colors hover:bg-white/25"
           >
@@ -53,7 +63,7 @@ export function CardTile({ card, onImport, onEdit, onDelete }: CardTileProps) {
           </button>
           <button
             type="button"
-            onClick={onEdit}
+            onClick={stop(onEdit)}
             aria-label="Editar cartão"
             className="rounded-full bg-white/15 p-1.5 transition-colors hover:bg-white/25"
           >
@@ -61,7 +71,7 @@ export function CardTile({ card, onImport, onEdit, onDelete }: CardTileProps) {
           </button>
           <button
             type="button"
-            onClick={onDelete}
+            onClick={stop(onDelete)}
             aria-label="Excluir cartão"
             className="rounded-full bg-white/15 p-1.5 transition-colors hover:bg-white/25"
           >

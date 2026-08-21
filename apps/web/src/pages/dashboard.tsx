@@ -1,19 +1,18 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import { CreditCard as CreditCardIcon, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AppHeader } from "@/components/app-header";
 import { CardTile, AddCardTile } from "@/components/cards/card-tile";
 import { CardFormDialog } from "@/components/cards/card-form-dialog";
 import { DeleteCardDialog } from "@/components/cards/delete-card-dialog";
 import { UploadInvoiceDialog } from "@/components/cards/upload-invoice-dialog";
-import { useAuth } from "@/lib/auth-context";
 import { apiGet } from "@/lib/api";
 import type { CreditCard } from "@/lib/types";
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [cards, setCards] = React.useState<CreditCard[]>([]);
   const [status, setStatus] = React.useState<"loading" | "ready" | "error">("loading");
   const [formOpen, setFormOpen] = React.useState(false);
@@ -63,18 +62,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen w-full bg-muted/30">
-      <header className="border-b border-border/50 bg-card/50">
-        <div className="mx-auto flex max-w-5xl items-center justify-between p-4">
-          <Logo />
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <span className="hidden text-sm text-muted-foreground sm:inline">Olá, {user?.name}</span>
-            <Button variant="outline" size="sm" onClick={() => logout()}>
-              Sair
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="mx-auto max-w-5xl p-4 sm:p-8">
         <div className="mb-6 flex items-center justify-between">
@@ -115,6 +103,7 @@ export default function Dashboard() {
               <CardTile
                 key={card.id}
                 card={card}
+                onOpen={() => navigate(`/cartoes/${card.id}`)}
                 onImport={() => setImportingCard(card)}
                 onEdit={() => openEditDialog(card)}
                 onDelete={() => setDeletingCard(card)}
@@ -131,6 +120,9 @@ export default function Dashboard() {
         card={importingCard}
         onOpenChange={(open) => !open && setImportingCard(null)}
         onImported={() => {}}
+        onViewInvoice={(invoice) => {
+          if (importingCard) navigate(`/cartoes/${importingCard.id}/faturas/${invoice.id}`);
+        }}
       />
     </div>
   );

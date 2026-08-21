@@ -17,6 +17,7 @@ interface UploadInvoiceDialogProps {
   card: CreditCard | null;
   onOpenChange: (open: boolean) => void;
   onImported: (invoice: Invoice) => void;
+  onViewInvoice: (invoice: Invoice) => void;
 }
 
 type UploadState =
@@ -25,10 +26,10 @@ type UploadState =
   | { status: "success"; invoice: Invoice }
   | { status: "error"; message: string };
 
-const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" });
+const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
 const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
-export function UploadInvoiceDialog({ card, onOpenChange, onImported }: UploadInvoiceDialogProps) {
+export function UploadInvoiceDialog({ card, onOpenChange, onImported, onViewInvoice }: UploadInvoiceDialogProps) {
   const [file, setFile] = React.useState<File | null>(null);
   const [state, setState] = React.useState<UploadState>({ status: "idle" });
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -84,7 +85,14 @@ export function UploadInvoiceDialog({ card, onOpenChange, onImported }: UploadIn
                 {currencyFormatter.format(state.invoice.totalAmount)}
               </p>
             </div>
-            <Button onClick={() => onOpenChange(false)}>Concluído</Button>
+            <Button
+              onClick={() => {
+                onViewInvoice(state.invoice);
+                onOpenChange(false);
+              }}
+            >
+              Ver itens da fatura
+            </Button>
           </div>
         ) : (
           <>

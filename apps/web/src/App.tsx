@@ -5,6 +5,8 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { RequireAuth } from "@/components/require-auth";
 import Dashboard from "@/pages/dashboard";
+import CardDetail from "@/pages/card-detail";
+import InvoiceDetail from "@/pages/invoice-detail";
 import ResetPassword from "@/pages/reset-password";
 import { useAuth } from "@/lib/auth-context";
 
@@ -37,6 +39,22 @@ export default function App() {
           element={
             <RequireAuth>
               <Dashboard />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/cartoes/:cardId"
+          element={
+            <RequireAuth>
+              <CardDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/cartoes/:cardId/faturas/:invoiceId"
+          element={
+            <RequireAuth>
+              <InvoiceDetail />
             </RequireAuth>
           }
         />

@@ -1,10 +1,16 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Fatura+ <onboarding@resend.dev>";
 
 export async function sendPasswordResetEmail(to: string, name: string, resetToken: string): Promise<void> {
   const resetUrl = `${process.env.CORS_ORIGIN}/redefinir-senha?token=${resetToken}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn(`RESEND_API_KEY não configurada — link de redefinição para ${to}: ${resetUrl}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   await resend.emails.send({
     from: FROM_EMAIL,
