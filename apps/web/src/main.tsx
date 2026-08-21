@@ -4,11 +4,14 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { ThemeProvider } from "./components/theme-provider";
+import { AuthProvider } from "./lib/auth-context";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>,
 );

@@ -1,0 +1,10 @@
+-- CreateEnum
+CREATE TYPE "CardBrand" AS ENUM ('VISA', 'MASTERCARD', 'ELO', 'AMEX', 'OTHER');
+
+-- AlterTable
+ALTER TABLE "Card" ADD COLUMN     "brand" "CardBrand" NOT NULL DEFAULT 'OTHER',
+ADD COLUMN     "color" TEXT NOT NULL DEFAULT '#0d9488',
+ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "lastFourDigits" TEXT,
+ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL;
+

@@ -7,15 +7,17 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  name          String
-  passwordHash  String
-  createdAt     DateTime       @default(now())
-  cards         Card[]
-  categories    Category[]
-  categoryRules CategoryRule[]
-  refreshTokens RefreshToken[]
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  name                String
+  passwordHash        String?
+  googleId            String?              @unique
+  createdAt           DateTime             @default(now())
+  cards               Card[]
+  categories          Category[]
+  categoryRules       CategoryRule[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model RefreshToken {
@@ -30,14 +32,39 @@ model RefreshToken {
   @@index([userId])
 }
 
-model Card {
-  id       String    @id @default(cuid())
-  name     String
-  userId   String
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invoices Invoice[]
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+model Card {
+  id             String    @id @default(cuid())
+  name           String
+  brand          CardBrand @default(OTHER)
+  lastFourDigits String?
+  color          String    @default("#0d9488")
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices       Invoice[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+enum CardBrand {
+  VISA
+  MASTERCARD
+  ELO
+  AMEX
+  OTHER
 }
 
 model Invoice {
