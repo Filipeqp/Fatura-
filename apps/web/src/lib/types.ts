@@ -11,6 +11,13 @@ export interface CreditCard {
   updatedAt: string;
 }
 
+export interface Category {
+  id: string;
+  userId: string;
+  name: string;
+  color: string;
+}
+
 export type InvoiceStatus = "OPEN" | "PAID" | "OVERDUE";
 
 export interface InvoiceItem {

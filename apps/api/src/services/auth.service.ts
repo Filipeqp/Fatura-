@@ -5,6 +5,7 @@ import { fetchGoogleProfile } from "../lib/google-auth.js";
 import { createPasswordResetToken, createRefreshToken, hashToken, signAccessToken } from "../lib/jwt.js";
 import { sendPasswordResetEmail } from "../lib/mailer.js";
 import { userRepository } from "../repositories/user.repository.js";
+import { categoryService } from "./category.service.js";
 
 const PASSWORD_SALT_ROUNDS = 10;
 
@@ -33,6 +34,7 @@ export const authService = {
       email: data.email,
       passwordHash,
     });
+    await categoryService.seedDefaultsForUser(user.id);
 
     return issueSession(user);
   },
@@ -53,9 +55,12 @@ export const authService = {
 
     if (!user) {
       const existingByEmail = await userRepository.findByEmail(profile.email);
-      user = existingByEmail
-        ? await userRepository.linkGoogleId(existingByEmail.id, profile.googleId)
-        : await userRepository.createFromGoogle(profile);
+      if (existingByEmail) {
+        user = await userRepository.linkGoogleId(existingByEmail.id, profile.googleId);
+      } else {
+        user = await userRepository.createFromGoogle(profile);
+        await categoryService.seedDefaultsForUser(user.id);
+      }
     }
 
     return issueSession(user);
