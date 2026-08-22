@@ -31,6 +31,15 @@ const resetPasswordSchema = z.object({
   password: z.string().min(8),
 });
 
+const updateProfileSchema = z.object({
+  name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres").max(100),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+
 function setRefreshCookie(res: Response, token: string) {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
@@ -106,4 +115,22 @@ export async function me(req: Request, res: Response) {
     throw new UnauthorizedError();
   }
   res.json({ user });
+}
+
+export async function updateProfile(req: Request, res: Response) {
+  const data = updateProfileSchema.parse(req.body);
+  const user = await authService.updateProfile(req.userId!, data);
+  res.json({ user });
+}
+
+export async function changePassword(req: Request, res: Response) {
+  const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+  await authService.changePassword(req.userId!, currentPassword, newPassword);
+  res.status(204).send();
+}
+
+export async function deleteAccount(req: Request, res: Response) {
+  await authService.deleteAccount(req.userId!);
+  res.clearCookie(REFRESH_COOKIE_NAME);
+  res.status(204).send();
 }

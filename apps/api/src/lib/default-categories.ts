@@ -8,17 +8,17 @@ export interface DefaultCategory {
 export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   {
     name: "Alimentação",
-    color: "#f97316",
+    color: "#2a78d6",
     keywords: ["IFOOD", "RAPPI", "MC DONALDS", "MCDONALDS", "BURGER KING", "HABIBS"],
   },
   {
     name: "Transporte",
-    color: "#0ea5e9",
+    color: "#eb6834",
     keywords: ["UBER", "99APP", "99POP", "POSTO", "SHELL", "IPIRANGA", "ESTACIONAMENTO", "CLICKBUS"],
   },
   {
     name: "Assinaturas",
-    color: "#8b5cf6",
+    color: "#1baf7a",
     keywords: [
       "NETFLIX",
       "SPOTIFY",
@@ -33,27 +33,27 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     name: "Saúde",
-    color: "#22c55e",
+    color: "#eda100",
     keywords: ["FARMACIA", "DROGARIA", "DROGASIL", "PAGUE MENOS", "PANVEL"],
   },
   {
     name: "Mercado",
-    color: "#eab308",
+    color: "#e87ba4",
     keywords: ["SUPERMERCADO", "ATACADAO", "CARREFOUR", "PAO DE ACUCAR", "ASSAI", "HORTIFRUTI"],
   },
   {
     name: "Lazer",
-    color: "#ec4899",
+    color: "#008300",
     keywords: ["CINEMA", "INGRESSO", "STEAM", "PLAYSTATION", "XBOX", "SYMPLA"],
   },
   {
     name: "Compras",
-    color: "#6366f1",
+    color: "#4a3aa7",
     keywords: ["AMAZON", "MERCADO LIVRE", "MERCADOLIVRE", "SHOPEE", "MAGAZINE LUIZA", "SHEIN", "ALIEXPRESS"],
   },
   {
     name: "Outros",
-    color: "#64748b",
+    color: "#e34948",
     keywords: [],
   },
 ];

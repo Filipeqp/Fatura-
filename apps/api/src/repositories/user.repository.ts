@@ -48,6 +48,14 @@ export const userRepository = {
     return prisma.user.update({ where: { id: userId }, data: { passwordHash } });
   },
 
+  updateName(userId: string, name: string) {
+    return prisma.user.update({ where: { id: userId }, data: { name } });
+  },
+
+  deleteUser(userId: string) {
+    return prisma.user.delete({ where: { id: userId } });
+  },
+
   createPasswordResetToken(data: { userId: string; tokenHash: string; expiresAt: Date }) {
     return prisma.passwordResetToken.create({ data });
   },

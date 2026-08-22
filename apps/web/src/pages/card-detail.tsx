@@ -1,11 +1,12 @@
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, FileText, Loader2, Upload } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Sparkles, Upload } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { UploadInvoiceDialog } from "@/components/cards/upload-invoice-dialog";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import type { CreditCard, Invoice } from "@/lib/types";
 
 const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
@@ -17,6 +18,33 @@ const STATUS_LABELS: Record<Invoice["status"], string> = {
   OVERDUE: "Atrasada",
 };
 
+function getDueBadge(invoice: Invoice): { label: string; className: string } | null {
+  if (invoice.status === "PAID") return null;
+
+  const due = new Date(invoice.dueDate);
+  const now = new Date();
+  const dueUTC = Date.UTC(due.getUTCFullYear(), due.getUTCMonth(), due.getUTCDate());
+  const nowUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const diffDays = Math.round((dueUTC - nowUTC) / 86_400_000);
+
+  if (diffDays < 0) {
+    const days = Math.abs(diffDays);
+    return {
+      label: `Atrasada há ${days} ${days === 1 ? "dia" : "dias"}`,
+      className: "bg-destructive/10 text-destructive",
+    };
+  }
+
+  if (diffDays <= 7) {
+    return {
+      label: diffDays === 0 ? "Vence hoje" : `Vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"}`,
+      className: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    };
+  }
+
+  return null;
+}
+
 export default function CardDetail() {
   const { cardId } = useParams<{ cardId: string }>();
   const navigate = useNavigate();
@@ -24,6 +52,8 @@ export default function CardDetail() {
   const [invoices, setInvoices] = React.useState<Invoice[]>([]);
   const [status, setStatus] = React.useState<"loading" | "ready" | "error">("loading");
   const [importing, setImporting] = React.useState(false);
+  const [categorizing, setCategorizing] = React.useState(false);
+  const [categorizeMessage, setCategorizeMessage] = React.useState<string | null>(null);
 
   const load = React.useCallback(() => {
     if (!cardId) return;
@@ -43,6 +73,23 @@ export default function CardDetail() {
   React.useEffect(() => {
     load();
   }, [load]);
+
+  const handleCategorizeAll = async () => {
+    if (!cardId) return;
+    setCategorizing(true);
+    setCategorizeMessage(null);
+    try {
+      const result = await apiPost<{ categorizedCount: number }>(`/cards/${cardId}/categorize`);
+      setCategorizeMessage(
+        result.categorizedCount === 0
+          ? "Nenhum item novo pra categorizar."
+          : `${result.categorizedCount} ${result.categorizedCount === 1 ? "item categorizado" : "itens categorizados"}.`,
+      );
+      load();
+    } finally {
+      setCategorizing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-muted/30">
@@ -80,13 +127,27 @@ export default function CardDetail() {
               </span>
             </div>
 
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <h1 className="text-xl font-semibold text-foreground">Faturas</h1>
-              <Button size="sm" onClick={() => setImporting(true)}>
-                <Upload className="mr-2 h-4 w-4" />
-                Importar fatura
-              </Button>
+              <div className="flex gap-2">
+                {invoices.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={handleCategorizeAll} disabled={categorizing}>
+                    {categorizing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Categorizar todas as faturas
+                  </Button>
+                )}
+                <Button size="sm" onClick={() => setImporting(true)}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Importar fatura
+                </Button>
+              </div>
             </div>
+
+            {categorizeMessage && <p className="mb-4 text-sm text-muted-foreground">{categorizeMessage}</p>}
 
             {invoices.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border py-16 text-center">
@@ -114,8 +175,19 @@ export default function CardDetail() {
                       <p className="font-medium capitalize text-foreground">
                         {monthFormatter.format(new Date(invoice.referenceMonth))}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {invoice.items.length} {invoice.items.length === 1 ? "item" : "itens"} · {STATUS_LABELS[invoice.status]}
+                      <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <span>
+                          {invoice.items.length} {invoice.items.length === 1 ? "item" : "itens"} ·{" "}
+                          {STATUS_LABELS[invoice.status]}
+                        </span>
+                        {(() => {
+                          const badge = getDueBadge(invoice);
+                          return badge ? (
+                            <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", badge.className)}>
+                              {badge.label}
+                            </span>
+                          ) : null;
+                        })()}
                       </p>
                     </div>
                     <span className="font-semibold text-foreground">{currencyFormatter.format(invoice.totalAmount)}</span>

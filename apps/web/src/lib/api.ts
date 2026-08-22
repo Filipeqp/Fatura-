@@ -6,8 +6,9 @@ interface RequestOptions {
   accessToken?: string | null;
 }
 
-interface ApiError extends Error {
+export interface ApiError extends Error {
   status?: number;
+  body?: unknown;
 }
 
 async function rawRequest<TResponse>(
@@ -28,6 +29,7 @@ async function rawRequest<TResponse>(
   if (!response.ok) {
     const error: ApiError = new Error(data?.error ?? "Erro inesperado");
     error.status = response.status;
+    error.body = data;
     throw error;
   }
 

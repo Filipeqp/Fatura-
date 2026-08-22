@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 
-import { ConflictError, UnauthorizedError } from "../lib/app-error.js";
+import { BadRequestError, ConflictError, UnauthorizedError } from "../lib/app-error.js";
 import { fetchGoogleProfile } from "../lib/google-auth.js";
 import { createPasswordResetToken, createRefreshToken, hashToken, signAccessToken } from "../lib/jwt.js";
 import { sendPasswordResetEmail } from "../lib/mailer.js";
@@ -9,11 +9,29 @@ import { categoryService } from "./category.service.js";
 
 const PASSWORD_SALT_ROUNDS = 10;
 
-function toPublicUser(user: { id: string; name: string; email: string }) {
-  return { id: user.id, name: user.name, email: user.email };
+function toPublicUser(user: {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string | null;
+  googleId: string | null;
+}) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    hasPassword: Boolean(user.passwordHash),
+    hasGoogle: Boolean(user.googleId),
+  };
 }
 
-async function issueSession(user: { id: string; name: string; email: string }) {
+async function issueSession(user: {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string | null;
+  googleId: string | null;
+}) {
   const accessToken = signAccessToken(user.id);
   const { token: refreshToken, tokenHash, expiresAt } = createRefreshToken();
   await userRepository.createRefreshToken({ userId: user.id, tokenHash, expiresAt });
@@ -120,5 +138,31 @@ export const authService = {
   async getUser(userId: string) {
     const user = await userRepository.findById(userId);
     return user ? toPublicUser(user) : null;
+  },
+
+  async updateProfile(userId: string, data: { name: string }) {
+    const user = await userRepository.updateName(userId, data.name);
+    return toPublicUser(user);
+  },
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedError();
+    }
+    if (!user.passwordHash) {
+      throw new BadRequestError("Sua conta usa login do Google e não tem senha para trocar");
+    }
+    if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      throw new UnauthorizedError("Senha atual incorreta");
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, PASSWORD_SALT_ROUNDS);
+    await userRepository.updatePassword(userId, passwordHash);
+    await userRepository.revokeAllRefreshTokens(userId);
+  },
+
+  async deleteAccount(userId: string) {
+    await userRepository.deleteUser(userId);
   },
 };

@@ -16,10 +16,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { apiPost } from "@/lib/api";
+import { apiPatch, apiPost } from "@/lib/api";
+import { CATEGORY_PALETTE } from "@/lib/chart-colors";
 import type { Category } from "@/lib/types";
 
-const COLOR_PRESETS = ["#f97316", "#0ea5e9", "#8b5cf6", "#22c55e", "#eab308", "#ec4899", "#6366f1", "#64748b"];
+const COLOR_PRESETS = CATEGORY_PALETTE;
 
 const categoryFormSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres").max(30),
@@ -31,10 +32,12 @@ type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 interface CategoryFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreated: (category: Category) => void;
+  category?: Category | null;
+  onSaved: (category: Category) => void;
 }
 
-export function CategoryFormDialog({ open, onOpenChange, onCreated }: CategoryFormDialogProps) {
+export function CategoryFormDialog({ open, onOpenChange, category, onSaved }: CategoryFormDialogProps) {
+  const isEditing = Boolean(category);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -52,9 +55,9 @@ export function CategoryFormDialog({ open, onOpenChange, onCreated }: CategoryFo
 
   React.useEffect(() => {
     if (!open) return;
-    reset({ name: "", color: COLOR_PRESETS[0] });
+    reset({ name: category?.name ?? "", color: category?.color ?? COLOR_PRESETS[0] });
     setError(null);
-  }, [open, reset]);
+  }, [open, category, reset]);
 
   const color = watch("color");
 
@@ -62,11 +65,13 @@ export function CategoryFormDialog({ open, onOpenChange, onCreated }: CategoryFo
     setIsSubmitting(true);
     setError(null);
     try {
-      const result = await apiPost<{ category: Category }>("/categories", data);
-      onCreated(result.category);
+      const result = isEditing
+        ? await apiPatch<{ category: Category }>(`/categories/${category!.id}`, data)
+        : await apiPost<{ category: Category }>("/categories", data);
+      onSaved(isEditing ? { ...category!, ...result.category } : { ...result.category, rules: [], _count: { items: 0 } });
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível criar a categoria.");
+      setError(err instanceof Error ? err.message : "Não foi possível salvar a categoria.");
     } finally {
       setIsSubmitting(false);
     }
@@ -76,8 +81,10 @@ export function CategoryFormDialog({ open, onOpenChange, onCreated }: CategoryFo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nova categoria</DialogTitle>
-          <DialogDescription>Crie uma categoria personalizada pra organizar seus gastos.</DialogDescription>
+          <DialogTitle>{isEditing ? "Editar categoria" : "Nova categoria"}</DialogTitle>
+          <DialogDescription>
+            {isEditing ? "Atualize o nome ou a cor dessa categoria." : "Crie uma categoria personalizada pra organizar seus gastos."}
+          </DialogDescription>
         </DialogHeader>
 
         {error && (
@@ -127,10 +134,10 @@ export function CategoryFormDialog({ open, onOpenChange, onCreated }: CategoryFo
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando...
+                  Salvando...
                 </>
               ) : (
-                "Criar categoria"
+                "Salvar"
               )}
             </Button>
           </DialogFooter>

@@ -77,6 +77,7 @@ model Invoice {
   status         InvoiceStatus @default(OPEN)
   items          InvoiceItem[]
   createdAt      DateTime      @default(now())
+  reminderSentAt DateTime?
 
   @@unique([cardId, referenceMonth])
   @@index([cardId])
@@ -98,13 +99,14 @@ model InvoiceItem {
 }
 
 model Category {
-  id     String         @id @default(cuid())
-  userId String
-  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name   String
-  color  String
-  items  InvoiceItem[]
-  rules  CategoryRule[]
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  color         String
+  monthlyBudget Float?
+  items         InvoiceItem[]
+  rules         CategoryRule[]
 
   @@unique([userId, name])
   @@index([userId])

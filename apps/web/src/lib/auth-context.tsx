@@ -3,10 +3,12 @@ import * as React from "react";
 import { apiPost } from "@/lib/api";
 import { getAccessToken, onSessionExpired, setAccessToken, subscribeAccessToken } from "@/lib/token-store";
 
-interface AuthUser {
+export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  hasPassword: boolean;
+  hasGoogle: boolean;
 }
 
 interface AuthState {
@@ -18,6 +20,7 @@ interface AuthContextValue extends AuthState {
   accessToken: string | null;
   login: (accessToken: string, user: AuthUser) => void;
   logout: () => Promise<void>;
+  updateUser: (user: AuthUser) => void;
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -70,9 +73,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const updateUser = React.useCallback((user: AuthUser) => {
+    setState((prev) => ({ ...prev, user }));
+  }, []);
+
   const value = React.useMemo(
-    () => ({ ...state, accessToken, login, logout }),
-    [state, accessToken, login, logout],
+    () => ({ ...state, accessToken, login, logout, updateUser }),
+    [state, accessToken, login, logout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

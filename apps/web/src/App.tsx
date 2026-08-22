@@ -7,6 +7,10 @@ import { RequireAuth } from "@/components/require-auth";
 import Dashboard from "@/pages/dashboard";
 import CardDetail from "@/pages/card-detail";
 import InvoiceDetail from "@/pages/invoice-detail";
+import Categories from "@/pages/categories";
+import Search from "@/pages/search";
+import OverviewPage from "@/pages/overview";
+import Account from "@/pages/account";
 import ResetPassword from "@/pages/reset-password";
 import { useAuth } from "@/lib/auth-context";
 
@@ -55,6 +59,38 @@ export default function App() {
           element={
             <RequireAuth>
               <InvoiceDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/categorias"
+          element={
+            <RequireAuth>
+              <Categories />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/buscar"
+          element={
+            <RequireAuth>
+              <Search />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/visao-geral"
+          element={
+            <RequireAuth>
+              <OverviewPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/conta"
+          element={
+            <RequireAuth>
+              <Account />
             </RequireAuth>
           }
         />

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 
 import {
+  changePassword,
+  deleteAccount,
   forgotPassword,
   googleLogin,
   login,
@@ -10,6 +12,7 @@ import {
   refresh,
   register,
   resetPassword,
+  updateProfile,
 } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/authenticate.js";
 
@@ -47,3 +50,6 @@ authRoutes.post("/reset-password", resetPassword);
 authRoutes.post("/refresh", refresh);
 authRoutes.post("/logout", logout);
 authRoutes.get("/me", authenticate, me);
+authRoutes.patch("/me", authenticate, updateProfile);
+authRoutes.delete("/me", authenticate, deleteAccount);
+authRoutes.post("/change-password", authenticate, changePassword);

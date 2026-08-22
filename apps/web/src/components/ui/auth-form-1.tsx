@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { apiPost } from "@/lib/api";
 import { loadGoogleIdentityServices } from "@/lib/google-identity";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, type AuthUser } from "@/lib/auth-context";
 
 // --------------------------------
 // Types and Enums
@@ -184,7 +184,7 @@ function AuthSocialButtons({ isLoading }: AuthSocialButtonsProps) {
             try {
               const data = await apiPost<{
                 accessToken: string;
-                user: { id: string; name: string; email: string };
+                user: AuthUser;
               }>("/auth/google", { accessToken: response.access_token });
               login(data.accessToken, data.user);
               navigate("/dashboard", { replace: true });
@@ -301,7 +301,7 @@ function AuthSignIn({ onForgotPassword, onSignUp }: AuthSignInProps) {
     try {
       const result = await apiPost<{
         accessToken: string;
-        user: { id: string; name: string; email: string };
+        user: AuthUser;
       }>("/auth/login", data);
       login(result.accessToken, result.user);
       navigate("/dashboard", { replace: true });
@@ -441,7 +441,7 @@ function AuthSignUp({ onSignIn }: AuthSignUpProps) {
     try {
       const result = await apiPost<{
         accessToken: string;
-        user: { id: string; name: string; email: string };
+        user: AuthUser;
       }>("/auth/register", { name: data.name, email: data.email, password: data.password });
       login(result.accessToken, result.user);
       navigate("/dashboard", { replace: true });

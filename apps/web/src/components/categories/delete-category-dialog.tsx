@@ -4,53 +4,46 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiDelete } from "@/lib/api";
-import type { CreditCard } from "@/lib/types";
+import type { Category } from "@/lib/types";
 
-interface DeleteCardDialogProps {
-  card: CreditCard | null;
+interface DeleteCategoryDialogProps {
+  category: Category | null;
   onOpenChange: (open: boolean) => void;
-  onDeleted: (cardId: string) => void;
+  onDeleted: (categoryId: string) => void;
 }
 
-export function DeleteCardDialog({ card, onOpenChange, onDeleted }: DeleteCardDialogProps) {
+export function DeleteCategoryDialog({ category, onOpenChange, onDeleted }: DeleteCategoryDialogProps) {
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const invoiceCount = card?._count?.invoices ?? 0;
-  const itemCount = card?.itemCount ?? 0;
 
   const handleDelete = async () => {
-    if (!card) return;
+    if (!category) return;
     setIsDeleting(true);
     setError(null);
     try {
-      await apiDelete(`/cards/${card.id}`);
-      onDeleted(card.id);
+      await apiDelete(`/categories/${category.id}`);
+      onDeleted(category.id);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível excluir o cartão.");
+      setError(err instanceof Error ? err.message : "Não foi possível excluir a categoria.");
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const itemCount = category?._count.items ?? 0;
+
   return (
-    <Dialog open={Boolean(card)} onOpenChange={onOpenChange}>
+    <Dialog open={Boolean(category)} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Excluir cartão</DialogTitle>
+          <DialogTitle>Excluir categoria</DialogTitle>
           <DialogDescription>
-            Tem certeza que deseja excluir {card ? `"${card.name}"` : "este cartão"}?
-            {invoiceCount > 0 && (
-              <>
-                {" "}
-                <strong>
-                  {invoiceCount} {invoiceCount === 1 ? "fatura" : "faturas"} e {itemCount}{" "}
-                  {itemCount === 1 ? "item importado" : "itens importados"}
-                </strong>{" "}
-                serão excluídos junto.
-              </>
-            )}{" "}
-            Essa ação não pode ser desfeita.
+            Tem certeza que deseja excluir {category ? `"${category.name}"` : "esta categoria"}?
+            {itemCount > 0
+              ? ` ${itemCount} ${itemCount === 1 ? "item ficará" : "itens ficarão"} sem categoria — eles não são apagados.`
+              : ""}{" "}
+            As palavras-chave associadas a ela também são removidas.
           </DialogDescription>
         </DialogHeader>
 

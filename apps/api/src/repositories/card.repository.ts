@@ -10,8 +10,19 @@ export interface CardInput {
 }
 
 export const cardRepository = {
-  findManyByUser(userId: string) {
-    return prisma.card.findMany({ where: { userId }, orderBy: { createdAt: "asc" } });
+  async findManyByUser(userId: string) {
+    const cards = await prisma.card.findMany({
+      where: { userId },
+      orderBy: { createdAt: "asc" },
+      include: { _count: { select: { invoices: true } } },
+    });
+
+    return Promise.all(
+      cards.map(async (card) => ({
+        ...card,
+        itemCount: await prisma.invoiceItem.count({ where: { invoice: { cardId: card.id } } }),
+      })),
+    );
   },
 
   findByIdForUser(id: string, userId: string) {
