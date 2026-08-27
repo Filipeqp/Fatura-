@@ -90,7 +90,7 @@ export function UploadInvoiceDialog({ card, onOpenChange, onImported, onViewInvo
                 de substituir.
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
               <div>
                 <p className="text-muted-foreground">Já importada</p>
                 <p className="font-medium text-foreground">{currencyFormatter.format(state.existing.totalAmount)}</p>

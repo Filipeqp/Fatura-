@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { DonutBreakdown, foldEntries } from "@/components/invoices/category-breakdown-chart";
 import { MonthlyBarChart } from "@/components/overview/monthly-bar-chart";
 import { CommitmentsPanel } from "@/components/overview/commitments-panel";
+import { CategoryEvolutionPanel } from "@/components/overview/category-evolution-panel";
 import { UNCATEGORIZED_COLOR } from "@/lib/chart-colors";
 import { apiGet } from "@/lib/api";
 import type { Overview } from "@/lib/types";
@@ -68,7 +69,10 @@ export default function OverviewPage() {
               </div>
             </div>
 
-            <MonthlyBarChart data={overview.monthly} />
+            <MonthlyBarChart
+              data={overview.monthly}
+              projection={overview.projection.some((p) => p.total > 0) ? overview.projection : undefined}
+            />
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <DonutBreakdown
@@ -87,6 +91,10 @@ export default function OverviewPage() {
               />
               <CommitmentsPanel commitments={overview.commitments} totalAmount={overview.totalCommitmentAmount} />
             </div>
+
+            {overview.categoryHistory.length > 0 && (
+              <CategoryEvolutionPanel categoryHistory={overview.categoryHistory} />
+            )}
           </div>
         )}
       </main>

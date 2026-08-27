@@ -269,7 +269,7 @@ export default function InvoiceDetail() {
         {status === "ready" && invoice && (
           <div className="lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-6">
             <div className="min-w-0">
-              <div className="mb-6 flex items-center justify-between">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h1 className="text-xl font-semibold capitalize text-foreground">
                     {monthFormatter.format(new Date(invoice.referenceMonth))}
@@ -324,74 +324,144 @@ export default function InvoiceDetail() {
                   <p className="text-sm text-muted-foreground">Essa fatura não tem itens.</p>
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-border">
-                  <div className="grid grid-cols-[3.5rem_1fr_11rem_auto_2rem] gap-4 border-b border-border bg-muted/50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    <span>Data</span>
-                    <span>Descrição</span>
-                    <span>Categoria</span>
-                    <span className="text-right">Valor</span>
-                    <span />
-                  </div>
-                  {invoice.items.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        "grid grid-cols-[3.5rem_1fr_11rem_auto_2rem] items-center gap-4 bg-card px-4 py-3 text-sm",
-                        index > 0 && "border-t border-border",
-                      )}
-                    >
-                      <span className="text-muted-foreground">{dateFormatter.format(new Date(item.date))}</span>
-                      <div>
-                        <EditableDescription
-                          value={item.description}
-                          disabled={savingItemId === item.id}
-                          onCommit={(description) => handleItemChange(item.id, { description })}
-                        />
-                        {item.installment && (
-                          <p className="px-1 text-xs text-muted-foreground">Parcela {item.installment}</p>
+                <>
+                  {/* Desktop/tablet: tabela em grid */}
+                  <div className="hidden overflow-hidden rounded-xl border border-border sm:block">
+                    <div className="grid grid-cols-[3.5rem_1fr_11rem_auto_2rem] gap-4 border-b border-border bg-muted/50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <span>Data</span>
+                      <span>Descrição</span>
+                      <span>Categoria</span>
+                      <span className="text-right">Valor</span>
+                      <span />
+                    </div>
+                    {invoice.items.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "grid grid-cols-[3.5rem_1fr_11rem_auto_2rem] items-center gap-4 bg-card px-4 py-3 text-sm",
+                          index > 0 && "border-t border-border",
                         )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <CategorySelect
-                          categories={categories}
-                          value={item.categoryId}
+                      >
+                        <span className="text-muted-foreground">{dateFormatter.format(new Date(item.date))}</span>
+                        <div>
+                          <EditableDescription
+                            value={item.description}
+                            disabled={savingItemId === item.id}
+                            onCommit={(description) => handleItemChange(item.id, { description })}
+                          />
+                          {item.installment && (
+                            <p className="px-1 text-xs text-muted-foreground">Parcela {item.installment}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <CategorySelect
+                            categories={categories}
+                            value={item.categoryId}
+                            disabled={savingItemId === item.id}
+                            onChange={(categoryId) => handleItemChange(item.id, { categoryId })}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0"
+                            aria-label="Criar regra a partir deste item"
+                            onClick={() => setRuleItem(item)}
+                          >
+                            <Tag className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        <EditableAmount
+                          value={item.amount}
                           disabled={savingItemId === item.id}
-                          onChange={(categoryId) => handleItemChange(item.id, { categoryId })}
+                          onCommit={(amount) => handleItemChange(item.id, { amount })}
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 shrink-0"
-                          aria-label="Criar regra a partir deste item"
-                          onClick={() => setRuleItem(item)}
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          aria-label="Excluir item"
+                          disabled={deletingItemId === item.id}
+                          onClick={() => handleDeleteItem(item.id)}
                         >
-                          <Tag className="h-3.5 w-3.5" />
+                          {deletingItemId === item.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5" />
+                          )}
                         </Button>
                       </div>
-                      <EditableAmount
-                        value={item.amount}
-                        disabled={savingItemId === item.id}
-                        onCommit={(amount) => handleItemChange(item.id, { amount })}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        aria-label="Excluir item"
-                        disabled={deletingItemId === item.id}
-                        onClick={() => handleDeleteItem(item.id)}
-                      >
-                        {deletingItemId === item.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+
+                  {/* Mobile: cartões empilhados, sem rolagem horizontal */}
+                  <div className="space-y-2 sm:hidden">
+                    {invoice.items.map((item) => (
+                      <div key={item.id} className="rounded-xl border border-border bg-card p-3 text-sm">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <EditableDescription
+                              value={item.description}
+                              disabled={savingItemId === item.id}
+                              onCommit={(description) => handleItemChange(item.id, { description })}
+                            />
+                            <div className="mt-0.5 flex items-center gap-2 px-1 text-xs text-muted-foreground">
+                              <span>{dateFormatter.format(new Date(item.date))}</span>
+                              {item.installment && (
+                                <>
+                                  <span>·</span>
+                                  <span>Parcela {item.installment}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                            aria-label="Excluir item"
+                            disabled={deletingItemId === item.id}
+                            onClick={() => handleDeleteItem(item.id)}
+                          >
+                            {deletingItemId === item.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-2">
+                          <CategorySelect
+                            categories={categories}
+                            value={item.categoryId}
+                            disabled={savingItemId === item.id}
+                            onChange={(categoryId) => handleItemChange(item.id, { categoryId })}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0"
+                            aria-label="Criar regra a partir deste item"
+                            onClick={() => setRuleItem(item)}
+                          >
+                            <Tag className="h-3.5 w-3.5" />
+                          </Button>
+                          <div className="shrink-0">
+                            <EditableAmount
+                              value={item.amount}
+                              disabled={savingItemId === item.id}
+                              onCommit={(amount) => handleItemChange(item.id, { amount })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 

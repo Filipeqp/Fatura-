@@ -208,16 +208,16 @@ export default function Categories() {
             {categories.map((category) => (
               <div key={category.id} className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <span className="h-3.5 w-3.5 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
-                    <div>
-                      <p className="font-medium text-foreground">{category.name}</p>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-foreground">{category.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {category._count.items} {category._count.items === 1 ? "item" : "itens"}
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex shrink-0 gap-1">
                     <Button
                       variant="ghost"
                       size="icon"

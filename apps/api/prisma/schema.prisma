@@ -99,17 +99,35 @@ model InvoiceItem {
 }
 
 model Category {
-  id            String         @id @default(cuid())
+  id            String                @id @default(cuid())
   userId        String
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   name          String
   color         String
   monthlyBudget Float?
   items         InvoiceItem[]
   rules         CategoryRule[]
+  budgetAlerts  CategoryBudgetAlert[]
 
   @@unique([userId, name])
   @@index([userId])
+}
+
+model CategoryBudgetAlert {
+  id         String            @id @default(cuid())
+  categoryId String
+  category   Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  month      DateTime
+  level      BudgetAlertLevel
+  sentAt     DateTime          @default(now())
+
+  @@unique([categoryId, month, level])
+  @@index([categoryId])
+}
+
+enum BudgetAlertLevel {
+  NEAR
+  OVER
 }
 
 model CategoryRule {

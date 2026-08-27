@@ -129,7 +129,7 @@ export default function CardDetail() {
 
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <h1 className="text-xl font-semibold text-foreground">Faturas</h1>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {invoices.length > 0 && (
                   <Button variant="outline" size="sm" onClick={handleCategorizeAll} disabled={categorizing}>
                     {categorizing ? (

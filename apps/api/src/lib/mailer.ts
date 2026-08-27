@@ -38,6 +38,59 @@ export async function sendPasswordResetEmail(to: string, name: string, resetToke
   });
 }
 
+export async function sendBudgetAlertEmail(
+  to: string,
+  name: string,
+  categoryName: string,
+  spent: number,
+  budget: number,
+  level: "NEAR" | "OVER",
+): Promise<void> {
+  const formattedSpent = currencyFormatter.format(spent);
+  const formattedBudget = currencyFormatter.format(budget);
+  const percentage = Math.round((spent / budget) * 100);
+
+  const subject =
+    level === "OVER"
+      ? `Orçamento de ${categoryName} estourado — Fatura+`
+      : `Você já usou ${percentage}% do orçamento de ${categoryName} — Fatura+`;
+
+  const headline = level === "OVER" ? "Orçamento estourado" : "Orçamento quase no limite";
+
+  const body =
+    level === "OVER"
+      ? `Olá, ${name}. Você já gastou <strong>${formattedSpent}</strong> em <strong>${categoryName}</strong> este mês, passando do orçamento de <strong>${formattedBudget}</strong>.`
+      : `Olá, ${name}. Você já gastou <strong>${formattedSpent}</strong> em <strong>${categoryName}</strong> este mês — <strong>${percentage}%</strong> do orçamento de <strong>${formattedBudget}</strong>.`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn(`RESEND_API_KEY não configurada — alerta de orçamento (${level}) para ${to}: ${categoryName} ${formattedSpent}/${formattedBudget}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1f2937;">
+        <h2 style="color: #0d9488;">${headline}</h2>
+        <p>${body}</p>
+        <p>
+          <a
+            href="${process.env.CORS_ORIGIN}/categorias"
+            style="display: inline-block; padding: 12px 20px; background: #0d9488; color: #fff; text-decoration: none; border-radius: 8px;"
+          >
+            Ver categorias no Fatura+
+          </a>
+        </p>
+        <p style="color: #6b7280; font-size: 12px;">Você recebeu este e-mail porque definiu um orçamento mensal para esta categoria no Fatura+.</p>
+      </div>
+    `,
+  });
+}
+
 export async function sendDueDateReminderEmail(
   to: string,
   name: string,

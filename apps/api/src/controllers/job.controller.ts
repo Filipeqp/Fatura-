@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 
+import { checkBudgetAlerts } from "../jobs/budget-alert.js";
 import { checkUpcomingDueDates } from "../jobs/due-date-reminder.js";
 
 /**
@@ -9,5 +10,11 @@ import { checkUpcomingDueDates } from "../jobs/due-date-reminder.js";
  */
 export async function runDueDateCheck(_req: Request, res: Response) {
   const result = await checkUpcomingDueDates();
+  res.json(result);
+}
+
+/** Mesma ressalva do runDueDateCheck acima: disparo manual pra teste, deveria ser rota de sistema num app real. */
+export async function runBudgetAlertCheck(_req: Request, res: Response) {
+  const result = await checkBudgetAlerts();
   res.json(result);
 }

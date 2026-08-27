@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, Search as SearchIcon } from "lucide-react";
 
 import { AppHeader } from "@/components/app-header";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiGet } from "@/lib/api";
+import { exportItemsToCsv } from "@/lib/csv";
 import type { SearchResultItem } from "@/lib/types";
 
 const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric", timeZone: "UTC" });
@@ -76,44 +78,59 @@ export default function Search() {
         )}
 
         {status === "ready" && results.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-border">
-            {results.map((item, index) => (
-              <button
-                key={item.id}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">
+                {results.length} {results.length === 1 ? "resultado" : "resultados"}
+              </p>
+              <Button
                 type="button"
-                onClick={() => navigate(`/cartoes/${item.invoice.cardId}/faturas/${item.invoice.id}`)}
-                className={`flex w-full items-center justify-between gap-4 bg-card p-4 text-left text-sm transition-colors hover:bg-accent ${
-                  index > 0 ? "border-t border-border" : ""
-                }`}
+                variant="outline"
+                size="sm"
+                onClick={() => exportItemsToCsv(results, `fatura-plus-busca-${query.trim()}.csv`)}
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-foreground">{item.description}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span>{dateFormatter.format(new Date(item.date))}</span>
-                    <span>·</span>
-                    <span className="flex items-center gap-1">
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: item.invoice.card.color }}
-                      />
-                      {item.invoice.card.name}
-                    </span>
-                    <span>·</span>
-                    <span className="capitalize">{monthFormatter.format(new Date(item.invoice.referenceMonth))}</span>
-                    {item.category && (
-                      <>
-                        <span>·</span>
-                        <span className="flex items-center gap-1">
-                          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.category.color }} />
-                          {item.category.name}
-                        </span>
-                      </>
-                    )}
+                Exportar CSV
+              </Button>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-border">
+              {results.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => navigate(`/cartoes/${item.invoice.cardId}/faturas/${item.invoice.id}`)}
+                  className={`flex w-full items-center justify-between gap-4 bg-card p-4 text-left text-sm transition-colors hover:bg-accent ${
+                    index > 0 ? "border-t border-border" : ""
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-foreground">{item.description}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span>{dateFormatter.format(new Date(item.date))}</span>
+                      <span>·</span>
+                      <span className="flex items-center gap-1">
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: item.invoice.card.color }}
+                        />
+                        {item.invoice.card.name}
+                      </span>
+                      <span>·</span>
+                      <span className="capitalize">{monthFormatter.format(new Date(item.invoice.referenceMonth))}</span>
+                      {item.category && (
+                        <>
+                          <span>·</span>
+                          <span className="flex items-center gap-1">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.category.color }} />
+                            {item.category.name}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <span className="shrink-0 font-semibold text-foreground">{currencyFormatter.format(item.amount)}</span>
-              </button>
-            ))}
+                  <span className="shrink-0 font-semibold text-foreground">{currencyFormatter.format(item.amount)}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </main>

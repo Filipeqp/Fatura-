@@ -82,12 +82,21 @@ export interface Commitment {
   remainingAmount: number;
 }
 
+export interface CategoryHistoryEntry {
+  categoryId: string;
+  name: string;
+  color: string;
+  months: MonthlyTotal[];
+}
+
 export interface Overview {
   monthly: MonthlyTotal[];
   currentMonthTotal: number;
   categoryBreakdown: OverviewCategoryTotal[];
+  categoryHistory: CategoryHistoryEntry[];
   commitments: Commitment[];
   totalCommitmentAmount: number;
+  projection: MonthlyTotal[];
   cardCount: number;
 }
 

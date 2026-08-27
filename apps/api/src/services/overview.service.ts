@@ -21,6 +21,21 @@ interface Commitment {
   remainingAmount: number;
 }
 
+const PROJECTION_MONTHS = 3;
+
+function emptyMonthlyMap(now: Date): Map<string, number> {
+  const map = new Map<string, number>();
+  for (let i = 0; i < MONTHS_BACK; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (MONTHS_BACK - 1 - i), 1));
+    map.set(monthKey(d), 0);
+  }
+  return map;
+}
+
+function mapToMonthlyTotals(map: Map<string, number>): { month: string; total: number }[] {
+  return Array.from(map.entries()).map(([key, total]) => ({ month: `${key}-01T00:00:00.000Z`, total }));
+}
+
 export const overviewService = {
   async get(userId: string) {
     const now = new Date();
@@ -32,21 +47,14 @@ export const overviewService = {
       select: { referenceMonth: true, totalAmount: true },
     });
 
-    const monthlyMap = new Map<string, number>();
-    for (let i = 0; i < MONTHS_BACK; i++) {
-      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (MONTHS_BACK - 1 - i), 1));
-      monthlyMap.set(monthKey(d), 0);
-    }
+    const monthlyMap = emptyMonthlyMap(now);
     for (const invoice of invoices) {
       const key = monthKey(invoice.referenceMonth);
       if (monthlyMap.has(key)) {
         monthlyMap.set(key, (monthlyMap.get(key) ?? 0) + invoice.totalAmount);
       }
     }
-    const monthly = Array.from(monthlyMap.entries()).map(([key, total]) => ({
-      month: `${key}-01T00:00:00.000Z`,
-      total,
-    }));
+    const monthly = mapToMonthlyTotals(monthlyMap);
 
     const currentMonthTotal = monthly[monthly.length - 1]?.total ?? 0;
 
@@ -72,6 +80,38 @@ export const overviewService = {
     }
 
     const categoryBreakdown = Array.from(categoryTotals.values()).sort((a, b) => b.amount - a.amount);
+
+    const rangeItems = await prisma.invoiceItem.findMany({
+      where: { categoryId: { not: null }, invoice: { card: { userId }, referenceMonth: { gte: rangeStart } } },
+      select: { amount: true, categoryId: true, category: { select: { name: true, color: true } }, invoice: { select: { referenceMonth: true } } },
+    });
+
+    const categoryHistoryMap = new Map<string, { name: string; color: string; months: Map<string, number> }>();
+    for (const item of rangeItems) {
+      if (!item.categoryId || !item.category) continue;
+      let entry = categoryHistoryMap.get(item.categoryId);
+      if (!entry) {
+        entry = { name: item.category.name, color: item.category.color, months: emptyMonthlyMap(now) };
+        categoryHistoryMap.set(item.categoryId, entry);
+      }
+      const key = monthKey(item.invoice.referenceMonth);
+      if (entry.months.has(key)) {
+        entry.months.set(key, (entry.months.get(key) ?? 0) + item.amount);
+      }
+    }
+
+    const categoryHistory = Array.from(categoryHistoryMap.entries())
+      .map(([categoryId, entry]) => ({
+        categoryId,
+        name: entry.name,
+        color: entry.color,
+        months: mapToMonthlyTotals(entry.months),
+      }))
+      .sort((a, b) => {
+        const totalA = a.months.reduce((sum, m) => sum + m.total, 0);
+        const totalB = b.months.reduce((sum, m) => sum + m.total, 0);
+        return totalB - totalA;
+      });
 
     const cards = await prisma.card.findMany({
       where: { userId },
@@ -118,12 +158,21 @@ export const overviewService = {
     commitments.sort((a, b) => b.remainingAmount - a.remainingAmount);
     const totalCommitmentAmount = commitments.reduce((sum, c) => sum + c.remainingAmount, 0);
 
+    const projection = [];
+    for (let m = 1; m <= PROJECTION_MONTHS; m++) {
+      const monthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + m, 1));
+      const total = commitments.reduce((sum, c) => sum + (c.remainingInstallments >= m ? c.amount : 0), 0);
+      projection.push({ month: monthDate.toISOString(), total });
+    }
+
     return {
       monthly,
       currentMonthTotal,
       categoryBreakdown,
+      categoryHistory,
       commitments,
       totalCommitmentAmount,
+      projection,
       cardCount: cards.length,
     };
   },
