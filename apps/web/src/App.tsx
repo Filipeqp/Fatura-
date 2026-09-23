@@ -12,6 +12,7 @@ import Search from "@/pages/search";
 import OverviewPage from "@/pages/overview";
 import Account from "@/pages/account";
 import ResetPassword from "@/pages/reset-password";
+import PrivacyPolicy from "@/pages/privacy-policy";
 import { useAuth } from "@/lib/auth-context";
 
 function AuthLayout({ initialView }: { initialView: "sign-in" | "sign-up" }) {
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/login" element={<AuthLayout initialView="sign-in" />} />
         <Route path="/registrar" element={<AuthLayout initialView="sign-up" />} />
         <Route path="/redefinir-senha" element={<ResetPassword />} />
+        <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
         <Route
           path="/dashboard"
           element={
