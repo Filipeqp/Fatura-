@@ -4,7 +4,7 @@ Organizador de faturas de cartão de crédito. Você faz upload da fatura, o sis
 
 Projeto pessoal de portfólio, construído para ser usado de verdade — com login/cadastro reais, banco de dados em produção e suporte a múltiplos usuários, cada um vendo apenas os próprios dados.
 
-**Deploy:** em breve.
+**Deploy:** [fatura-web-iota.vercel.app](https://fatura-web-iota.vercel.app) (front, Vercel) · API no Railway.
 
 ## Status atual
 
@@ -16,12 +16,15 @@ O fluxo essencial (login → upload de fatura → categorização → dashboard)
 - [x] Upload de fatura em PDF, com parsing automático (Nubank e Santander) e importação dos itens
 - [x] Categorização automática por regras de palavra-chave, com categorias padrão sugeridas
 - [x] Busca de itens entre faturas
-- [x] Dashboard com visão geral consolidada dos gastos
+- [x] Dashboard com visão geral consolidada dos gastos, projeção de gastos futuros e evolução por categoria
+- [x] Orçamento mensal por categoria, com alerta por e-mail ao se aproximar/estourar o limite
+- [x] Exportar CSV dos itens buscados
 - [x] Job agendado (cron) para aviso de vencimento de fatura
-- [x] Testes unitários da regra de categorização, dos parsers de fatura (Nubank e Santander) e dos services de autenticação e fatura (Vitest)
+- [x] Responsivo (celular e tablet), com menu mobile dedicado
+- [x] Testes unitários da regra de categorização, dos parsers de fatura (Nubank e Santander), dos services de autenticação/fatura e dos jobs (Vitest)
 - [ ] Testes da camada de repositório/integração com o banco
 - [ ] Suporte a mais bancos além de Nubank/Santander
-- [ ] Deploy em produção (Vercel + Fly.io + Neon)
+- [x] Deploy em produção (Vercel + Railway + Neon)
 
 ## Stack
 
@@ -43,9 +46,9 @@ O fluxo essencial (login → upload de fatura → categorização → dashboard)
 - node-cron para o job de aviso de vencimento
 - Vitest para os serviços críticos: categorização, parsing de fatura e services de auth/fatura (mockando repositórios e libs externas)
 
-**Infraestrutura** (planejado)
+**Infraestrutura**
 - Frontend na Vercel
-- Backend no Fly.io
+- Backend no Railway (Docker)
 - Banco de dados gerenciado no Neon
 
 ## Estrutura de pastas
