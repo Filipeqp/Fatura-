@@ -40,11 +40,16 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(8),
 });
 
+const isProduction = process.env.NODE_ENV === "production";
+
 function setRefreshCookie(res: Response, token: string) {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProduction,
+    // Front (Vercel) e API (Fly.io) ficam em domínios diferentes em produção — precisa de
+    // SameSite=None (só válido com Secure) pra o cookie ser enviado nas requisições cross-site.
+    // Em dev, localhost:porta conta como "mesmo site", então Lax já basta e evita exigir HTTPS local.
+    sameSite: isProduction ? "none" : "lax",
     maxAge: REFRESH_TOKEN_MAX_AGE_MS,
   });
 }
@@ -105,7 +110,7 @@ export async function logout(req: Request, res: Response) {
   if (currentRefreshToken) {
     await authService.logout(currentRefreshToken);
   }
-  res.clearCookie(REFRESH_COOKIE_NAME);
+  res.clearCookie(REFRESH_COOKIE_NAME, { secure: isProduction, sameSite: isProduction ? "none" : "lax" });
   res.status(204).send();
 }
 
@@ -131,6 +136,6 @@ export async function changePassword(req: Request, res: Response) {
 
 export async function deleteAccount(req: Request, res: Response) {
   await authService.deleteAccount(req.userId!);
-  res.clearCookie(REFRESH_COOKIE_NAME);
+  res.clearCookie(REFRESH_COOKIE_NAME, { secure: isProduction, sameSite: isProduction ? "none" : "lax" });
   res.status(204).send();
 }
